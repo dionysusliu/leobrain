@@ -4,7 +4,7 @@ You can drop it directly into your repository root as README.md.
 ⸻
 
 
-# 🌐 InsightCrawler — Personal Web Intelligence & ML Pipeline (MVP)
+# 🌐 LEOBRAIN — Personal Web Intelligence & ML Pipeline (MVP)
 
 > A personal "external brain" that crawls multi-source web data (news, finance, forums),  
 > analyzes trends & sentiment via ML plugins, and visualizes insights on a dashboard.
@@ -195,6 +195,28 @@ System	CPU/RAM usage, DB connections, API P95 latency
 	5.	Gradually containerize and migrate to cloud.
 
 ⸻
+
+## Quick Start
+
+1. Clone and set up environment:
+cd leobrain
+cp backend/.env.example backend/.env2. Start infrastructure services:
+cd deploy
+docker compose up -d3. Install backend dependencies:ash
+cd ../backend
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm4. Initialize database:ash
+alembic revision --autogenerate -m "Initial migration"
+alembic upgrade head5. Start backend:h
+uvicorn app.main:app --reload --host 0.0.0.0 --port 80006. Install frontend dependencies:
+cd ../frontend
+npm install7. Start frontend:
+npm run devAccess:
+- API: http://localhost:8000
+- Frontend: http://localhost:3000
+- Grafana: http://localhost:3001
+- MinIO Console: http://localhost:9001
+
 
 © 2025 InsightCrawler — Personal Knowledge System Prototype.
 
