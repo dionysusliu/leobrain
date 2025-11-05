@@ -1,0 +1,203 @@
+Sure — here’s a condensed, production-style README.md that captures everything above (MVP plan + architecture + tech stack + iteration workflow) in a single document.
+You can drop it directly into your repository root as README.md.
+
+⸻
+
+
+# 🌐 InsightCrawler — Personal Web Intelligence & ML Pipeline (MVP)
+
+> A personal "external brain" that crawls multi-source web data (news, finance, forums),  
+> analyzes trends & sentiment via ML plugins, and visualizes insights on a dashboard.
+
+---
+
+## 🚀 Goal
+1. Collect public data across diverse sources (finance, tech, knowledge forums).
+2. Run ML pipelines — sentiment, keyword, topic, correlation, trend.
+3. Persist and visualize insights for personal research & investment reasoning.
+4. Evolve into a modular, cloud-ready intelligence platform.
+
+---
+
+## 🧩 MVP Scope (Phase 1)
+| Area | Goal |
+|------|------|
+| **Data Ingestion** | Crawl 2–3 sources hourly, respect robots.txt, retry/back-off. |
+| **Storage** | Save metadata + body → Postgres + MinIO (S3-compatible). |
+| **Analysis** | Sentiment + Keyword plugins → store results (JSONB). |
+| **Dashboard** | Web UI filtering (time/source/keyword) + sentiment & keyword charts + CSV export + daily email. |
+| **Scheduler** | Prefect flows or Airflow DAGs with retry/log view. |
+| **Observability** | Prometheus metrics + structured logs + Grafana panel. |
+
+---
+
+## 🏗️ Architecture
+
+┌─────────────┐    ┌────────────┐    ┌────────────────────┐
+│  Crawlers   │──► │  Pipeline  │──► │ Analysis Plugins   │
+└─────────────┘    └────────────┘    └─────────┬──────────┘
+│                │                     │
+▼                ▼                     ▼
+MinIO (S3)       PostgreSQL           Prefect Scheduler
+│                │                     │
+└────────► FastAPI API ◄───────────────┘
+│
+Next.js UI
+│
+Grafana + Prometheus
+
+---
+
+## ⚙️ Core Tech Stack
+| Layer | Tech |
+|-------|------|
+| **Backend API** | Python 3.11 + FastAPI + SQLModel/Pydantic |
+| **Frontend** | Next.js (React 18) + Tailwind + Chart.js |
+| **DB** | PostgreSQL 15 |
+| **Object Store** | MinIO (local) → S3/OSS/GCS (later) |
+| **Queue / Cache** | Redis + Celery or Prefect Tasks |
+| **Search (Optional P1)** | OpenSearch or Elastic Cloud |
+| **ML Libs** | spaCy / scikit-learn / HuggingFace Transformers |
+| **Observability** | Prometheus + Grafana + OpenTelemetry SDK |
+| **Infra** | Docker + docker-compose → Helm + Terraform on K8s |
+| **CI/CD** | GitHub Actions (test → build → push images) |
+
+---
+
+## 🧠 Plugin Architecture (v1)
+
+Each analysis task is a plugin implementing a shared protocol.
+
+```python
+class AnalysisPlugin(Protocol):
+    name: str
+    version: str
+    def run(self, item: Content) -> AnalysisResult: ...
+
+	•	Built-in Plugins
+	•	sentiment → polarity ∈ {-1, 0, 1}, score [0, 1]
+	•	keywords → [{token, weight}]
+	•	Future
+	•	topic, correlation, trend
+	•	Enable/Disable via API or config.
+	•	Results stored as JSONB in analysis_results.
+
+⸻
+
+🗄️ Data Model (Simplified)
+
+Table	Fields
+contents	id (pk), source, url, title, author, published_at, body_ref, lang
+analysis_results	id, content_id → fk, plugin, version, result_type, payload(jsonb), created_at
+job_runs	id, job_name, status, started_at, ended_at, error_log
+
+
+⸻
+
+🧰 Local Setup
+
+Requirements
+	•	Docker + docker-compose
+	•	Python 3.11 (optional local dev)
+	•	Node 18+
+
+Start All Services
+
+git clone https://github.com/<you>/InsightCrawler
+cd InsightCrawler
+docker compose up -d
+
+Services:
+	•	FastAPI → http://localhost:8000
+	•	Next.js → http://localhost:3000
+	•	Prefect → http://localhost:4200
+	•	Grafana → http://localhost:3001
+
+⸻
+
+🧪 Verification Checklist (MVP)
+
+Stage	Success Criteria
+Ingestion	≥ 50 new docs per hour, HTTP success rate > 95 %.
+Analysis	Sentiment & keyword results for each doc, avg latency < 5 s.
+Dashboard	Charts render < 2 s, export CSV OK, daily email sent.
+Recovery	Task failure → auto-retry & logged.
+Metrics	/metrics exposes QPS, error rate, latency.
+
+
+⸻
+
+🔁 Iteration Workflow
+
+Sprint	Deliverable
+Week 1	Crawl 1 source → store → sentiment + keyword → UI chart.
+Week 2	Add 2 sources + Prefect panel + daily email + Prometheus.
+Week 3	Topic plugin + OpenSearch + Helm/Terraform skeleton.
+
+Principles:
+	•	Vertical slice > big-bang.
+	•	Each plugin = feature flag (off by default).
+	•	Keep 1 click rollback (Alembic + Docker tag).
+
+⸻
+
+☁️ Cloud Migration Path
+
+Stage	Environment
+1. Single VM	Run docker-compose on EC2 / ECS / Aliyun ECS.
+2. 托管三件套	S3 + RDS (Postgres) + Elastic Cloud for search.
+3. Kubernetes	Deploy via Helm on EKS/GKE/ACK + GitOps (Argo CD).
+4. ML 托管	Move inference → SageMaker / Vertex AI / PAI.
+5. Micro Plugins	Heavy ML plugins → gRPC microservices with HPA.
+
+
+⸻
+
+🧩 Repo Structure
+
+repo/
+  backend/
+    app/           # FastAPI API
+    plugins/       # analysis modules
+    workers/       # celery/prefect tasks
+    common/        # contracts/models
+  frontend/        # Next.js dashboard
+  deploy/
+    docker-compose.yml
+    helm/
+    terraform/
+  ops/
+    grafana/
+    prometheus/
+  tests/
+    e2e/
+  README.md
+
+
+⸻
+
+🧠 Metrics to Watch
+
+Category	Key Metric
+Ingestion	New docs/hr, success %, avg fetch latency
+Analysis	Plugin error %, avg processing latency
+Output	Sentiment coverage %, keyword recall ≥ N
+System	CPU/RAM usage, DB connections, API P95 latency
+
+
+⸻
+
+✅ Next Steps
+	1.	Implement the crawler + 2 plugins prototype.
+	2.	Stand up docker-compose stack & verify end-to-end flow.
+	3.	Add Prefect orchestration + Prometheus metrics.
+	4.	Iterate weekly (add topic plugin → search → trend forecast).
+	5.	Gradually containerize and migrate to cloud.
+
+⸻
+
+© 2025 InsightCrawler — Personal Knowledge System Prototype.
+
+---
+
+Would you like me to generate the actual `docker-compose.yml` + folder skeleton referenced in this README next?
