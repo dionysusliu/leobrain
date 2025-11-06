@@ -1,0 +1,39 @@
+# Site configurations for crawlers
+# Each site defines: cron schedule, rate limits, headers, etc.
+
+bbc:
+  spider: rss
+  source_name: bbc
+  feed_url: "http://feeds.bbci.co.uk/news/rss.xml"
+  cron: "*/10 * * * *"  # Every 10 minutes
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0 (+https://github.com/leobrain)"
+  use_render: false
+
+hackernews:
+  spider: rss
+  source_name: hackernews
+  feed_url: "https://hnrss.org/frontpage"
+  cron: "*/5 * * * *"  # Every 5 minutes
+  qps: 2.0
+  concurrency: 4
+  max_items: 30
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+# Example: Yahoo Finance (if we implement it later)
+# yahoo_finance:
+#   spider: api  # Custom spider type
+#   source_name: yahoo_finance
+#   api_url: "https://query1.finance.yahoo.com/v7/finance/quote"
+#   cron: "0 */6 * * *"  # Every 6 hours
+#   qps: 0.5
+#   concurrency: 1
+#   use_render: false
+#   prefer_api: true
