@@ -44,13 +44,21 @@ class RSSSpider(ISpider):
         return [Request(
             url=self.feed_url,
             method="GET",
-            metadata={"source": self.source_name}
+            metadata={"source": self.source_name, "is_feed": True}
         )]
     
     def parse(self, resp: Response) -> Tuple[List[Item], List[Request]]:
         """Parse RSS feed response"""
         items = []
         new_requests = []
+        
+        # Check if this is actually a feed or a full article page
+        # If metadata says it's a feed, parse as feed; otherwise parse as article
+        is_feed = resp.request.metadata.get('is_feed', False)
+        
+        if not is_feed:
+            # This is a full article page, use parse_full_content logic
+            return self.parse_full_content(resp)
         
         try:
             # Parse RSS feed
@@ -105,7 +113,11 @@ class RSSSpider(ISpider):
                         new_requests.append(Request(
                             url=url,
                             method="GET",
-                            metadata={"source": self.source_name, "fetch_full": True}
+                            metadata={
+                                "source": self.source_name,
+                                "fetch_full": True,
+                                "original_item_url": url  # Keep reference to original item
+                            }
                         ))
                     
                 except Exception as e:
@@ -138,21 +150,73 @@ class RSSSpider(ISpider):
         return ""
     
     def parse_full_content(self, resp: Response) -> Tuple[List[Item], List[Request]]:
-        """Parse full article content (for follow-up requests)"""
-        # This would be called for follow-up requests
-        # For now, just extract the main content
-        body = self.parser.clean_text(resp.text)
+        """
+        Parse full article content (for follow-up requests)
         
-        # Extract title
-        selector = self.parser.parse_selector(resp.text)
-        title = self.parser.extract_text(selector, "h1") or "No title"
-        
-        item = Item(
-            url=resp.url,
-            title=title,
-            body=body,
-            source=self.source_name,
-            metadata={"fetched_full": True}
-        )
-        
-        return [item], []
+        This method is called when fetch_full_content=True and we're fetching
+        the actual article page to get the full content.
+        """
+        try:
+            # Extract main content from HTML
+            body = self.parser.clean_text(resp.text)
+            
+            # Extract title - try multiple selectors
+            selector = self.parser.parse_selector(resp.text)
+            title = (
+                self.parser.extract_text(selector, "h1") or
+                self.parser.extract_text(selector, "title") or
+                self.parser.extract_text(selector, ".article-title") or
+                "No title"
+            )
+            
+            # Try to extract article content specifically (not entire page)
+            # Common article selectors
+            article_body = (
+                self.parser.extract_all_text(selector, "article") or
+                self.parser.extract_all_text(selector, ".article-content") or
+                self.parser.extract_all_text(selector, ".post-content") or
+                self.parser.extract_all_text(selector, "main")
+            )
+            
+            if article_body:
+                body = " ".join(article_body)
+            else:
+                # Fallback to cleaned full page text
+                body = self.parser.clean_text(resp.text)
+            
+            # Extract author if possible
+            author = (
+                self.parser.extract_text(selector, ".author") or
+                self.parser.extract_text(selector, "[rel='author']") or
+                self.parser.extract_text(selector, ".byline")
+            )
+            
+            # Extract published date if possible
+            published_at = None
+            date_str = (
+                self.parser.extract_text(selector, "time[datetime]") or
+                self.parser.extract_text(selector, ".published-date") or
+                self.parser.extract_text(selector, "[itemprop='datePublished']")
+            )
+            if date_str:
+                published_at = self.parser.parse_date(date_str)
+            
+            item = Item(
+                url=resp.url,
+                title=title,
+                body=body,
+                source=self.source_name,
+                author=author,
+                published_at=published_at,
+                metadata={
+                    "fetched_full": True,
+                    "original_url": resp.request.metadata.get("original_item_url", resp.url)
+                }
+            )
+            
+            logger.debug(f"Fetched full content for: {title[:50]}...")
+            return [item], []
+            
+        except Exception as e:
+            logger.error(f"Error parsing full content from {resp.url}: {e}")
+            return [], []
