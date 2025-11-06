@@ -16,3 +16,12 @@ transformers
 torch
 prometheus-client
 python-multipart
+feedparser
+selectolax
+parsel
+playwright
+apscheduler
+aiolimiter
+tenacity
+pyyaml
+python-dateutil

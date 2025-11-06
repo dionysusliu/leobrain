@@ -65,7 +65,7 @@ class StorageService:
     
     def upload_content(
         self,
-        content_id: int,
+        content_uuid: int,
         content_body: bytes,
         content_type: str = "text/plain",
         source: Optional[str] = None
@@ -73,9 +73,9 @@ class StorageService:
         """Upload content body to MinIO"""
         # generate object path
         if source:
-            object_name = f"{source}/{content_id}.txt"
+            object_name = f"{source}/{content_uuid}.txt"
         else:
-            object_name = f"content/{content_id}.txt"
+            object_name = f"content/{content_uuid}.txt"
             
         try:
             from io import BytesIO
@@ -90,11 +90,11 @@ class StorageService:
                 content_type=content_type
             )
             
-            logger.info(f"Uploaded content {content_id} to {object_name}")
+            logger.info(f"Uploaded content {content_uuid} to {object_name}")
             return object_name
         
         except S3Error as e:
-            logger.error(f"Error uploading content {content_id}: {e}")
+            logger.error(f"Error uploading content {content_uuid}: {e}")
             raise
         
     

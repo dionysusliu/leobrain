@@ -3,6 +3,7 @@ from inspect import CO_ASYNC_GENERATOR
 from typing import Optional
 from pydantic import EmailStr
 from sqlmodel import SQLModel, Field, Relationship, JSON, Column
+import uuid
 
 
 class ContentBase(SQLModel):
@@ -15,6 +16,7 @@ class ContentBase(SQLModel):
     published_at: Optional[datetime] = None
     body_ref: Optional[str] = None
     lang: str = Field(default="en")
+    content_uuid: str = Field(default_factory=lambda: str(uuid.uuid4()), unique=True, index=True) # UUID as object id
     
 
 class Content(ContentBase, table=True):

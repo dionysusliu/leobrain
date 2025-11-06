@@ -14,7 +14,7 @@ def test_storage():
     # test upload
     test_content = b"This is a test content body"
     object_name = storage.upload_content(
-        content_id=1,
+        content_uuid=1,
         content_body=test_content,
         content_type="text/plain",
         source="test"
