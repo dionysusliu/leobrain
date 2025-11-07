@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>BBC News - Technology</title>
+        <link>https://www.bbc.com/news/technology</link>
+        <description>BBC News Technology Feed</description>
+        <language>en-us</language>
+        <lastBuildDate>Mon, 01 Jan 2024 12:00:00 GMT</lastBuildDate>
+        
+        <item>
+            <title>AI Breakthrough in Natural Language Processing</title>
+            <link>https://www.bbc.com/news/technology/article1</link>
+            <description>Scientists have made significant progress in AI language models.</description>
+            <content:encoded><![CDATA[<p>Scientists have made significant progress in AI language models. The new system can understand context better than previous versions.</p>]]></content:encoded>
+            <pubDate>Mon, 01 Jan 2024 10:00:00 GMT</pubDate>
+            <author>tech@bbc.com (BBC Technology)</author>
+            <guid isPermaLink="true">https://www.bbc.com/news/technology/article1</guid>
+        </item>
+        
+        <item>
+            <title>New Quantum Computing Milestone</title>
+            <link>https://www.bbc.com/news/technology/article2</link>
+            <description>Researchers achieve quantum supremacy in new experiment.</description>
+            <content:encoded><![CDATA[<p>Researchers achieve quantum supremacy in new experiment. This marks a major step forward in computing technology.</p>]]></content:encoded>
+            <pubDate>Mon, 01 Jan 2024 08:00:00 GMT</pubDate>
+            <author>science@bbc.com (BBC Science)</author>
+            <guid isPermaLink="true">https://www.bbc.com/news/technology/article2</guid>
+        </item>
+        
+        <item>
+            <title>Cybersecurity Alert: New Threat Detected</title>
+            <link>https://www.bbc.com/news/technology/article3</link>
+            <description>Security experts warn about new malware targeting critical infrastructure.</description>
+            <pubDate>Sun, 31 Dec 2023 20:00:00 GMT</pubDate>
+            <author>security@bbc.com (BBC Security)</author>
+            <guid isPermaLink="true">https://www.bbc.com/news/technology/article3</guid>
+        </item>
+    </channel>
+</rss>

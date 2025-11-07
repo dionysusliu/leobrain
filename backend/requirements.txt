@@ -25,3 +25,11 @@ aiolimiter
 tenacity
 pyyaml
 python-dateutil
+
+pytest
+pytest-asyncio
+pytest-cov
+pytest-mock
+responses
+freezegun
+faker

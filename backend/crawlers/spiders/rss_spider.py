@@ -81,9 +81,10 @@ class RSSSpider(ISpider):
                     
                     # Parse date
                     published_at = None
-                    if hasattr(entry, 'published'):
+                    # feedparser entry supports attribute access
+                    if hasattr(entry, 'published') and entry.published:
                         published_at = self.parser.parse_date(entry.published)
-                    elif hasattr(entry, 'updated'):
+                    elif hasattr(entry, 'updated') and entry.updated:
                         published_at = self.parser.parse_date(entry.updated)
                     
                     # Get author

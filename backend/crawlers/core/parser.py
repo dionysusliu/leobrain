@@ -54,13 +54,23 @@ class Parser:
         """Extract text using CSS or XPath"""
         if css_selector:
             text = selector.css(css_selector).get("")
+            # Extract text content, not HTML
+            if text:
+                # Parse and get text
+                from selectolax.parser import HTMLParser
+                tree = HTMLParser(text)
+                text = tree.body.text(separator=' ', strip=True) if tree.body else text.strip()
         elif xpath:
             text = selector.xpath(xpath).get("")
+            if text:
+                from selectolax.parser import HTMLParser
+                tree = HTMLParser(text)
+                text = tree.body.text(separator=' ', strip=True) if tree.body else text.strip()
         else:
             return None
         
         return text.strip() if text else None
-    
+
     @staticmethod
     def extract_all_text(selector: Selector, css_selector: str, xpath: Optional[str] = None) -> list[str]:
         """Extract all matching text"""
@@ -71,6 +81,21 @@ class Parser:
         else:
             return []
         
-        return [t.strip() for t in texts if t.strip()]
+        # Extract text from each element
+        result = []
+        for text in texts:
+            if text.strip():
+                # Parse HTML and extract text
+                from selectolax.parser import HTMLParser
+                try:
+                    tree = HTMLParser(text)
+                    clean_text = tree.body.text(separator=' ', strip=True) if tree.body else text.strip()
+                    if clean_text:
+                        result.append(clean_text)
+                except:
+                    # If parsing fails, use original text
+                    result.append(text.strip())
+        
+        return result
     
     

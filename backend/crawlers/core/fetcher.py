@@ -93,7 +93,7 @@ class HttpxFetcher(IFetcher):
         import time
 
         # check robots.txt
-        user_agent = req.header.get('User-Agent', '*') if req.header else '*'
+        user_agent = req.headers.get('User-Agent', '*') if req.headers else '*' 
         if not self.can_fetch(req.url, user_agent):
             logger.warning(f"URL blocked by robots.txt: {req.url}")
             return None

@@ -1,7 +1,7 @@
 """Pipelines for processing items"""
 import uuid
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 import logging
 from sqlmodel import Session, select
 from datetime import datetime, timezone
@@ -31,17 +31,23 @@ class IPipeline(ABC):
 class StoragePipeline(IPipeline):
     """Pipeline that stores items to DB and MinIO"""
 
-    def __init__(self):
+    def __init__(self, session: Optional[Session] = None):
         self.storage = get_storage_service()
+        self.session = session  # Optional session for testing
 
     
     async def process_item(self, item: Item) -> bool:
         """Process and store a single item"""
-        try:
-            # get database session 
+        # Use provided session or create a new one
+        if self.session:
+            session = self.session
+            should_close = False
+        else:
             session_gen = get_session()
             session = next(session_gen)
-
+            should_close = True
+        
+        try:
             try:
                 # check if content already exists 
                 statement = select(Content).where(Content.url == item.url) 
@@ -88,7 +94,8 @@ class StoragePipeline(IPipeline):
                 return False
 
             finally:
-                session.close()
+                if should_close:
+                    session.close()
         except Exception as e:
             logger.error(f"Error processing item {item.url}: {e}")
             return False
