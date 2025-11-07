@@ -1,7 +1,11 @@
-
-**/node_modules
+# python
 **/alembic
 **/__pycache__
+.pytest_cache
 
 # node
 package-lock.json
+**/node_modules
+
+# testing
+htmlcov/
