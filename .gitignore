@@ -2,10 +2,20 @@
 **/alembic
 **/__pycache__
 .pytest_cache
+.coverage
+.python-version
 
 # node
 package-lock.json
 **/node_modules
 
+# scripts
+scripts/
+
 # testing
 htmlcov/
+
+# logs
+backend/logs/  # Legacy path (if any)
+logs/          # Project logs directory
+*.log

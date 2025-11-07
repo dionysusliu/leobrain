@@ -144,23 +144,24 @@ class TestAPIE2E:
         self,
         async_client
     ):
-        """Test triggering crawl via API"""
+        """Test triggering crawl via API through Prefect"""
         # Trigger crawl via API
-        # Note: This may fail if scheduler is not started or site not configured
+        # Note: This may fail if Prefect server is not started or site not configured
         # That's okay for E2E testing - we're testing the API endpoint
         response = await async_client.post("/api/v1/crawlers/sites/bbc/crawl")
         
         # Possible status codes:
-        # 200: Success
+        # 200: Success (Prefect flow started)
         # 404: Site not found
-        # 409: Already running
-        # 503: Scheduler not started
-        assert response.status_code in [200, 202, 404, 409, 503]
+        # 500: Prefect server error or other error
+        assert response.status_code in [200, 404, 500]
         
-        if response.status_code in [200, 202]:
+        if response.status_code == 200:
             data = response.json()
             assert "message" in data
-            assert "job_id" in data
+            assert "flow_run_id" in data  # API returns flow_run_id, not job_id
+            assert "site" in data
+            assert data["site"] == "bbc"
     
     @pytest.mark.asyncio
     async def test_get_site_config(self, async_client):

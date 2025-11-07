@@ -57,6 +57,39 @@ def docker_services_required():
     return running_services
 
 
+@pytest.fixture(scope="session")
+def prefect_api_url():
+    """Get Prefect API URL from environment or use default"""
+    return os.getenv("PREFECT_API_URL", "http://localhost:4200/api")
+
+
+@pytest.fixture(scope="session")
+def prefect_server_required(prefect_api_url):
+    """Check if Prefect server is available (optional for some tests)"""
+    import subprocess
+    
+    # Check if Prefect server container is running
+    try:
+        result = subprocess.run(
+            ["docker", "ps", "--filter", "name=leobrain-prefect-server", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if "leobrain-prefect-server" not in result.stdout:
+            pytest.skip("Prefect server container is not running. Start it with: docker compose up -d prefect-server")
+    except Exception:
+        pytest.skip("Cannot check Prefect server status")
+    
+    # Check if Prefect API is accessible
+    try:
+        response = httpx.get(f"{prefect_api_url}/health", timeout=5)
+        if response.status_code != 200:
+            pytest.skip(f"Prefect server is not healthy (status: {response.status_code})")
+    except Exception as e:
+        pytest.skip(f"Cannot connect to Prefect server at {prefect_api_url}: {e}")
+
+
 # ==================== Database Fixtures ====================
 
 @pytest.fixture(scope="function")
@@ -219,6 +252,7 @@ def mock_fetcher_for_e2e():
         # Map URLs to fixture files
         url_to_fixture = {
             "http://feeds.bbci.co.uk/news/technology/rss.xml": "bbc_technology_rss.xml",
+            "http://feeds.bbci.co.uk/news/rss.xml": "bbc_technology_rss.xml",  # Add main BBC feed
             "https://hnrss.org/frontpage": "hackernews_rss.xml",
             "https://www.reutersagency.com/feed/": "reuters_rss.xml",
         }

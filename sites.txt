@@ -1,0 +1,14 @@
+https://www.theguardian.com/world/rss 1hr
+https://techcrunch.com/feed/ 6 hrs
+https://finance.yahoo.com/news/rssindex 1hr
+https://www.ft.com/rss/home/uk 1hr
+https://news.yahoo.com/rss/finance 1hr
+https://finance.yahoo.com/rss/topstories 1hr
+https://ir.thomsonreuters.com/rss/news-releases.xml?items=15 1day
+https://feeds.npr.org/1001/rss.xml 1hr
+https://cn.wsj.com/zh-hans/rss 1hr
+https://feeds.content.dowjones.io/public/rss/mw_topstories 1hr
+https://www.cnbc.com/id/100003114/device/rss/rss.html 1hr
+https://www.36kr.com/feed 2hr
+https://www.huxiu.com/rss/0.xml 1hr
+https://xueqiu.com/hots/topic/rss 1hr

@@ -1,16 +1,21 @@
 # fast api application
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import CONTENT_TYPE_LATEST
 from starlette.responses import Response
+import time
 import logging
 
 from common.database import init_db
+from common.logging_config import setup_logging
+from common.metrics import get_metrics, api_requests_total, api_request_duration
 from app.api.v1 import router as api_router
-from workers.scheduler_manager import get_scheduler, start_scheduler, stop_scheduler
+from workers.prefect_manager import apply_deployments
 
+# Setup structured logging
+setup_logging(level="INFO")
 logger = logging.getLogger(__name__)
 
 
@@ -21,16 +26,17 @@ async def lifespan(_app: FastAPI):
     logger.info("Starting up application...")
     init_db()
     
-    # Start scheduler
-    start_scheduler()
-    logger.info("Scheduler started")
+    # Apply Prefect deployments
+    try:
+        await apply_deployments()
+        logger.info("Prefect deployments applied")
+    except Exception as e:
+        logger.error(f"Error applying Prefect deployments: {e}", exc_info=True)
     
     yield
     
     # Shutdown
     logger.info("Shutting down application...")
-    stop_scheduler()
-    logger.info("Scheduler stopped")
 
 
 app = FastAPI(
@@ -49,6 +55,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# API metrics middleware
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    """Middleware to collect API metrics"""
+    start_time = time.time()
+    
+    response = await call_next(request)
+    
+    duration = time.time() - start_time
+    endpoint = request.url.path
+    method = request.method
+    status = response.status_code
+    
+    # Record metrics
+    api_requests_total.labels(method=method, endpoint=endpoint, status=status).inc()
+    api_request_duration.labels(method=method, endpoint=endpoint).observe(duration)
+    
+    return response
+
 # include API routes
 app.include_router(api_router, prefix="/api/v1")
 
@@ -66,4 +91,4 @@ async def health():
 @app.get("/metrics")
 async def metrics():
     """Prometheus metrics endpoint"""
-    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+    return Response(content=get_metrics(), media_type=CONTENT_TYPE_LATEST)

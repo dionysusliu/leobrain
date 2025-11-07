@@ -1,6 +1,8 @@
 # Site configurations for crawlers
 # Each site defines: cron schedule, rate limits, headers, etc.
 
+# ==================== 新闻类 ====================
+
 bbc:
   spider: rss
   source_name: bbc
@@ -13,6 +15,153 @@ bbc:
   headers:
     User-Agent: "LeoBrain/1.0 (+https://github.com/leobrain)"
   use_render: false
+
+theguardian:
+  spider: rss
+  source_name: theguardian
+  feed_url: "https://www.theguardian.com/world/rss"
+  cron: "0 * * * *"  # 1hr
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+npr:
+  spider: rss
+  source_name: npr
+  feed_url: "https://feeds.npr.org/1001/rss.xml"
+  cron: "0 * * * *"  # 1hr
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+cnbc:
+  spider: rss
+  source_name: cnbc
+  feed_url: "https://www.cnbc.com/id/100003114/device/rss/rss.html"
+  cron: "0 * * * *"  # 1hr
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+wsj_cn:
+  spider: rss
+  source_name: wsj_cn
+  feed_url: "https://cn.wsj.com/zh-hans/rss"
+  cron: "0 * * * *"  # 1hr
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+# ==================== 财经类 ====================
+
+yahoo_finance_news:
+  spider: rss
+  source_name: yahoo_finance_news
+  feed_url: "https://finance.yahoo.com/news/rssindex"
+  cron: "0 * * * *"  # 1hr
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+yahoo_finance_top:
+  spider: rss
+  source_name: yahoo_finance_top
+  feed_url: "https://finance.yahoo.com/rss/topstories"
+  cron: "0 * * * *"  # 1hr
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+yahoo_news_finance:
+  spider: rss
+  source_name: yahoo_news_finance
+  feed_url: "https://news.yahoo.com/rss/finance"
+  cron: "0 * * * *"  # 1hr
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+financial_times:
+  spider: rss
+  source_name: financial_times
+  feed_url: "https://www.ft.com/rss/home/uk"
+  cron: "0 * * * *"  # 1hr
+  qps: 0.5
+  concurrency: 1
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+dowjones:
+  spider: rss
+  source_name: dowjones
+  feed_url: "https://feeds.content.dowjones.io/public/rss/mw_topstories"
+  cron: "0 * * * *"  # 1hr
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+thomsonreuters:
+  spider: rss
+  source_name: thomsonreuters
+  feed_url: "https://ir.thomsonreuters.com/rss/news-releases.xml?items=15"
+  cron: "0 0 * * *"  # 1day
+  qps: 0.5
+  concurrency: 1
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+xueqiu:
+  spider: rss
+  source_name: xueqiu
+  feed_url: "https://xueqiu.com/hots/topic/rss"
+  cron: "0 * * * *"  # 1hr
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+# ==================== 科技类 ====================
 
 hackernews:
   spider: rss
@@ -27,13 +176,41 @@ hackernews:
     User-Agent: "LeoBrain/1.0"
   use_render: false
 
-# Example: Yahoo Finance (if we implement it later)
-# yahoo_finance:
-#   spider: api  # Custom spider type
-#   source_name: yahoo_finance
-#   api_url: "https://query1.finance.yahoo.com/v7/finance/quote"
-#   cron: "0 */6 * * *"  # Every 6 hours
-#   qps: 0.5
-#   concurrency: 1
-#   use_render: false
-#   prefer_api: true
+techcrunch:
+  spider: rss
+  source_name: techcrunch
+  feed_url: "https://techcrunch.com/feed/"
+  cron: "0 */6 * * *"  # 6hrs
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: true
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+36kr:
+  spider: rss
+  source_name: 36kr
+  feed_url: "https://www.36kr.com/feed"
+  cron: "0 */2 * * *"  # 2hr
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false
+
+huxiu:
+  spider: rss
+  source_name: huxiu
+  feed_url: "https://www.huxiu.com/rss/0.xml"
+  cron: "0 * * * *"  # 1hr
+  qps: 1.0
+  concurrency: 2
+  max_items: 50
+  fetch_full_content: false
+  headers:
+    User-Agent: "LeoBrain/1.0"
+  use_render: false

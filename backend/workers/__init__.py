@@ -1,11 +1,21 @@
 """Workers package"""
 from workers.crawler_task import crawl_site, create_crawl_jobs
-from workers.scheduler_manager import get_scheduler, start_scheduler, stop_scheduler
+from workers.prefect_manager import (
+    trigger_manual_crawl,
+    get_flow_runs,
+    get_deployments,
+    get_deployment_by_name,
+    apply_deployments,
+    create_prefect_deployments,
+)
 
 __all__ = [
     "crawl_site",
     "create_crawl_jobs",
-    "get_scheduler",
-    "start_scheduler",
-    "stop_scheduler",
+    "trigger_manual_crawl",
+    "get_flow_runs",
+    "get_deployments",
+    "get_deployment_by_name",
+    "apply_deployments",
+    "create_prefect_deployments",
 ]

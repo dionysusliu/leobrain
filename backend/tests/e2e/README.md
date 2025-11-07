@@ -21,7 +21,15 @@
    export TEST_MINIO_ACCESS_KEY="minioadmin"
    export TEST_MINIO_SECRET_KEY="minioadmin"
    export TEST_MINIO_BUCKET="leobrain-content-test"
+   export PREFECT_API_URL="http://localhost:4200/api"  # Prefect API URL
    ```
+
+### 服务要求
+
+- **必需服务**: PostgreSQL, MinIO
+- **可选服务**: Prefect Server（用于 Prefect 相关测试）
+  - 如果 Prefect 服务器未运行，相关测试会被跳过
+  - 启动 Prefect 服务器：`docker compose up -d prefect-server`
 
 ## 运行 E2E 测试
 
@@ -31,9 +39,10 @@ pytest tests/e2e/ -v -m e2e
 
 # 运行特定测试文件
 pytest tests/e2e/test_api_e2e.py -v
+pytest tests/e2e/test_prefect_e2e.py -v  # Prefect 相关测试
 
 # 带覆盖率
-pytest tests/e2e/ -v --cov=app --cov=crawlers --cov=common
+pytest tests/e2e/ -v --cov=app --cov=crawlers --cov=common --cov=workers
 ```
 
 ## 测试框架说明
@@ -50,8 +59,8 @@ pytest tests/e2e/ -v --cov=app --cov=crawlers --cov=common
    - Fixture 管理
 
 3. **Docker Compose**
-   - 管理真实的服务（PostgreSQL、MinIO、Redis）
-   - 测试使用真实的数据存储
+   - 管理真实的服务（PostgreSQL、MinIO、Redis、Prefect Server）
+   - 测试使用真实的数据存储和服务
 
 ### 测试流程
 
@@ -80,6 +89,19 @@ pytest tests/e2e/ -v --cov=app --cov=crawlers --cov=common
 - ✅ 创建内容
 - ✅ 获取单个内容
 - ✅ 触发爬虫任务
+
+### Prefect 集成测试
+- ✅ Prefect 服务器健康检查
+- ✅ Prefect WebUI 可访问性
+- ✅ 获取部署列表（从服务器和本地配置）
+- ✅ 创建部署配置
+- ✅ 获取流程运行记录
+- ✅ 手动触发爬虫任务
+- ✅ Jobs API 端点 (`/api/v1/jobs/`)
+- ✅ 特定 Job API 端点 (`/api/v1/jobs/{job_id}`)
+- ✅ 服务器连接失败回退机制
+- ✅ Crawlers API 中的 Prefect 状态集成
+- ✅ **完整 E2E 流程**: API -> Prefect -> Crawler -> DB -> MinIO（验证整个流程通过 Prefect）
 
 ### 完整流程测试
 - ✅ 爬虫 → 数据库 → MinIO 完整流程
@@ -112,4 +134,13 @@ echo $DATABASE_URL
 ```bash
 curl http://localhost:9000/minio/health/live
 ```
+
+### Prefect 服务器连接失败
+检查 Prefect 服务器是否可访问：
+```bash
+curl http://localhost:4200/api/health
+docker compose ps prefect-server
+```
+
+如果 Prefect 服务器未运行，Prefect 相关的 e2e 测试会被自动跳过，不会导致测试失败。
 

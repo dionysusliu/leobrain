@@ -100,7 +100,7 @@ services:
     ports:
       - "8081:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@leobrain.local
+      PGADMIN_DEFAULT_EMAIL: admin@leobrain.com
       PGADMIN_DEFAULT_PASSWORD: admin
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
@@ -129,10 +129,35 @@ services:
       - ./ops/promtail/promtail-config.yml:/etc/promtail/config.yml
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Mount log directory from project for backend API logs
+      # Backend writes to ./logs/leobrain-api.log (or /var/log/leobrain if LOG_DIR is set)
+      - ./logs:/var/log/leobrain:ro
     command: -config.file=/etc/promtail/config.yml
     depends_on:
       - loki
     restart: unless-stopped
+
+  # Prefect Server (Prefect 3.0+)
+  prefect-server:
+    image: prefecthq/prefect:3-python3.13
+    platform: linux/arm64
+    container_name: leobrain-prefect-server
+    command: prefect server start --host 0.0.0.0 --port 4200
+    ports:
+      - "4200:4200"  # Prefect API and UI
+    environment:
+      PREFECT_API_URL: "http://localhost:4200/api"
+      PREFECT_LOGGING_LEVEL: INFO
+      PREFECT_SERVER_API_HOST: "0.0.0.0"
+      PREFECT_SERVER_API_PORT: "4200"
+    volumes:
+      - prefect_data:/root/.prefect
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4200/api/health').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
       
     
@@ -145,3 +170,4 @@ volumes:
   heimdall_data:
   pgadmin_data:
   loki_data:
+  prefect_data:

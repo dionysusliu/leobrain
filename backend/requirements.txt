@@ -20,7 +20,6 @@ feedparser
 selectolax
 parsel
 playwright
-apscheduler
 aiolimiter
 tenacity
 pyyaml
@@ -33,3 +32,6 @@ pytest-mock
 responses
 freezegun
 faker
+
+prefect
+python-json-logger
