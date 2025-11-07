@@ -33,7 +33,7 @@ class TestCrawlerE2E:
         
         # Create engine with real pipeline
         from crawlers.core.pipelines import StoragePipeline
-        pipeline = StoragePipeline()
+        pipeline = StoragePipeline(session=test_session)
         pipeline.storage = mock_storage_service
         
         engine = CrawlerEngine(pipeline=pipeline)
@@ -87,7 +87,7 @@ class TestCrawlerE2E:
         ]
         
         from crawlers.core.pipelines import StoragePipeline
-        pipeline = StoragePipeline()
+        pipeline = StoragePipeline(session=test_session)
         pipeline.storage = mock_storage_service
         
         engine = CrawlerEngine(pipeline=pipeline)
@@ -125,8 +125,11 @@ class TestCrawlerE2E:
         assert total_count > 0
         
         from common.models import Content
-        bbc_contents = test_session.query(Content).filter(Content.source == "bbc").all()
-        hn_contents = test_session.query(Content).filter(Content.source == "hackernews").all()
+        from sqlmodel import select
+        bbc_statement = select(Content).where(Content.source == "bbc")
+        bbc_contents = test_session.exec(bbc_statement).all()
+        hn_statement = select(Content).where(Content.source == "hackernews")
+        hn_contents = test_session.exec(hn_statement).all()
         
         assert len(bbc_contents) > 0
         assert len(hn_contents) > 0
