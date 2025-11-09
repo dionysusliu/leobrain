@@ -1,6 +1,9 @@
 """Crawler management API"""
 from fastapi import APIRouter, HTTPException
+from typing import List, Optional
+from pydantic import BaseModel
 import logging
+import asyncio
 
 from crawlers.core.engine import load_site_configs
 from workers.prefect_manager import trigger_manual_crawl, get_flow_runs
@@ -8,6 +11,12 @@ from workers.prefect_manager import trigger_manual_crawl, get_flow_runs
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+class BatchCrawlRequest(BaseModel):
+    """Request model for batch crawl"""
+    sites: Optional[List[str]] = None  # If None, crawl all sites
+    parallel: bool = False  # Whether to run in parallel
 
 
 @router.get("/sites")
@@ -123,4 +132,98 @@ async def get_site_status(site_name: str):
         raise
     except Exception as e:
         logger.error("Error getting site status: %s", e)
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.post("/sites/batch-crawl")
+async def batch_trigger_crawl(request: BatchCrawlRequest):
+    """
+    Trigger crawl tasks for multiple sites
+    
+    Args:
+        request: BatchCrawlRequest with sites list and parallel flag
+            - sites: List of site names to crawl. If None, crawl all sites
+            - parallel: If True, trigger all tasks in parallel; if False, trigger sequentially
+    
+    Returns:
+        Dictionary with results for each site
+    """
+    try:
+        configs = load_site_configs()
+        
+        # Determine which sites to crawl
+        if request.sites is None:
+            # Crawl all sites
+            sites_to_crawl = list(configs.keys())
+        else:
+            # Validate sites
+            invalid_sites = [s for s in request.sites if s not in configs]
+            if invalid_sites:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Sites not found: {', '.join(invalid_sites)}"
+                )
+            sites_to_crawl = request.sites
+        
+        if not sites_to_crawl:
+            raise HTTPException(status_code=400, detail="No sites to crawl")
+        
+        results = {}
+        
+        async def trigger_single(site_name: str):
+            """Trigger crawl for a single site"""
+            try:
+                flow_run_id = await trigger_manual_crawl(site_name)
+                return {
+                    "success": True,
+                    "site": site_name,
+                    "flow_run_id": flow_run_id,
+                    "message": f"Crawl task started for {site_name}"
+                }
+            except Exception as e:
+                logger.error(f"Error triggering crawl for {site_name}: {e}")
+                return {
+                    "success": False,
+                    "site": site_name,
+                    "error": str(e)
+                }
+        
+        # Trigger crawls
+        if request.parallel:
+            # Trigger all in parallel
+            tasks = [trigger_single(site) for site in sites_to_crawl]
+            results_list = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Process results
+            for i, result in enumerate(results_list):
+                site_name = sites_to_crawl[i]
+                if isinstance(result, Exception):
+                    results[site_name] = {
+                        "success": False,
+                        "error": str(result)
+                    }
+                else:
+                    results[site_name] = result
+        else:
+            # Trigger sequentially
+            for site_name in sites_to_crawl:
+                result = await trigger_single(site_name)
+                results[site_name] = result
+        
+        # Count successes and failures
+        success_count = sum(1 for r in results.values() if r.get("success", False))
+        failure_count = len(results) - success_count
+        
+        return {
+            "message": f"Triggered {len(sites_to_crawl)} crawl tasks",
+            "total": len(sites_to_crawl),
+            "success": success_count,
+            "failed": failure_count,
+            "results": results
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error in batch trigger crawl: %s", e)
         raise HTTPException(status_code=500, detail=str(e)) from e

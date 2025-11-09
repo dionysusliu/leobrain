@@ -1,4 +1,6 @@
 # fast api application
+import os
+os.environ.setdefault("PREFECT_API_URL", "http://localhost:4200/api")
 
 from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
@@ -7,6 +9,7 @@ from prometheus_client import CONTENT_TYPE_LATEST
 from starlette.responses import Response
 import time
 import logging
+import os
 
 from common.database import init_db
 from common.logging_config import setup_logging
@@ -17,6 +20,12 @@ from workers.prefect_manager import apply_deployments
 # Setup structured logging
 setup_logging(level="INFO")
 logger = logging.getLogger(__name__)
+
+# Configure Prefect API URL to use Docker server
+# This ensures flows connect to the Docker Prefect server instead of creating a temporary one
+prefect_api_url = os.getenv("PREFECT_API_URL", "http://localhost:4200/api")
+os.environ["PREFECT_API_URL"] = prefect_api_url
+logger.info(f"Prefect API URL configured: {prefect_api_url}")
 
 
 @asynccontextmanager

@@ -1,6 +1,13 @@
 """Prefect task and flow management"""
+try:
+    import common.prefect_config
+except ImportError:
+    import os
+    os.environ.setdefault("PREFECT_API_URL", "http://localhost:4200/api")
+
 import logging
 import time
+import os
 from typing import Dict, Optional
 from prefect import flow, task, get_client
 from prefect.context import get_run_context
@@ -23,6 +30,13 @@ from common.metrics import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Ensure Prefect API URL is set to use Docker server
+# This prevents Prefect from creating a temporary server
+_prefect_api_url = os.getenv("PREFECT_API_URL", "http://localhost:4200/api")
+if "PREFECT_API_URL" not in os.environ:
+    os.environ["PREFECT_API_URL"] = _prefect_api_url
+    logger.info("Set Prefect API URL to: %s", _prefect_api_url)
 
 
 @task(name="crawl_site_task", log_prints=True)
@@ -140,6 +154,9 @@ async def trigger_manual_crawl(site_name: str) -> str:
     """
     Manually trigger a crawl via Prefect
     
+    This function ensures the flow run is created on the configured Prefect server
+    (Docker server) rather than creating a temporary server.
+    
     Returns:
         Flow run ID
     """
@@ -149,27 +166,51 @@ async def trigger_manual_crawl(site_name: str) -> str:
     
     config = configs[site_name]
     
+    # Ensure PREFECT_API_URL is set to use Docker server
+    prefect_api_url = os.getenv("PREFECT_API_URL", "http://localhost:4200/api")
+    if "PREFECT_API_URL" not in os.environ:
+        os.environ["PREFECT_API_URL"] = prefect_api_url
+    
+    logger.info("Triggering crawl for %s via Prefect server at %s", site_name, prefect_api_url)
+    
     # Run flow immediately and get flow run ID from the result
+    # The flow will use the configured PREFECT_API_URL to connect to Docker server
     # Note: Tags should be added via flow decorator or using tags context manager
-    flow_run_id = await crawl_site_flow.with_options(
-        name=f"manual-crawl-{site_name}"
-    )(
-        site_name=site_name,
-        config=config
-    )
-    
-    # flow_run_id is returned from the flow itself
-    if flow_run_id is None:
-        # Fallback: try to get from context
-        try:
-            run_context = get_run_context()
-            if run_context and hasattr(run_context, 'flow_run'):
-                return str(run_context.flow_run.id)
-        except Exception:
-            pass
-        raise RuntimeError("Failed to get flow run ID")
-    
-    return str(flow_run_id)
+    try:
+        flow_run_id = await crawl_site_flow.with_options(
+            name=f"manual-crawl-{site_name}"
+        )(
+            site_name=site_name,
+            config=config
+        )
+        
+        # flow_run_id is returned from the flow itself
+        if flow_run_id is None:
+            # Fallback: try to get from context
+            try:
+                run_context = get_run_context()
+                if run_context and hasattr(run_context, 'flow_run'):
+                    flow_run_id = str(run_context.flow_run.id)
+                    logger.info("Got flow run ID from context: %s", flow_run_id)
+                    return flow_run_id
+            except Exception as e:
+                logger.warning("Could not get flow run ID from context: %s", e)
+        
+        if flow_run_id:
+            logger.info("Flow run created with ID: %s", flow_run_id)
+            return str(flow_run_id)
+        else:
+            raise RuntimeError("Failed to get flow run ID from flow execution")
+            
+    except Exception as e:
+        logger.error("Error triggering crawl for %s: %s", site_name, e, exc_info=True)
+        # Check if it's a connection issue
+        if "connection" in str(e).lower() or "refused" in str(e).lower():
+            raise RuntimeError(
+                f"Cannot connect to Prefect server at {prefect_api_url}. "
+                f"Make sure Prefect server is running: docker compose up -d prefect-server"
+            ) from e
+        raise
 
 
 async def get_deployments():
