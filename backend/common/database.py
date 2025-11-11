@@ -17,7 +17,7 @@ def init_db():
     
 
 def get_session() -> Generator[Session, None, None]:
-    """Dependency for FastAPI to get database session
+    """Get database session generator
     """
     with Session(engine) as session:
         yield session

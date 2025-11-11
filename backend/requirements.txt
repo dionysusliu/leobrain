@@ -1,5 +1,3 @@
-fastapi
-uvicorn[standard]
 sqlmodel
 psycopg2-binary
 alembic
@@ -15,7 +13,6 @@ scikit-learn
 transformers
 torch
 prometheus-client
-python-multipart
 feedparser
 selectolax
 parsel

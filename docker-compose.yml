@@ -159,6 +159,26 @@ services:
       timeout: 5s
       retries: 5
 
+  # Prefect worker
+  prefect-worker:
+    image: prefecthq/prefect:3-python3.13
+    platform: linux/arm64
+    container_name: leobrain-prefect-worker
+    command: >
+      sh -c "
+      prefect worker start --pool pool-spider-rss 
+      " 
+    environment:
+      PREFECT_API_URL: "http://prefect-server:4200/api"
+      PREFECT_LOGGING_LEVEL: INFO
+    volumes:
+      - ./backend:/app/backend:ro 
+      - prefect_data:/root/.prefect
+    depends_on:
+      prefect-server:
+        condition: service_healthy
+    restart: unless-stopped
+    working_dir: /app/backend
       
     
 volumes:

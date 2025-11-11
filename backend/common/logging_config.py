@@ -77,8 +77,9 @@ def setup_logging(level: str = "INFO", log_dir: Optional[str] = None):
     file_handler.setFormatter(formatter)
     root_logger.addHandler(file_handler)
     
-    # Also output to stdout for local development/debugging
+    # Only output ERROR and above to stdout
     stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.setLevel(logging.ERROR)
     stdout_handler.setFormatter(formatter)
     root_logger.addHandler(stdout_handler)
     

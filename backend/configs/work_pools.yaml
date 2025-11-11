@@ -1,0 +1,16 @@
+## Prefect work pool 配置
+work_pools:
+  default:
+    name: "default"
+    type: "process"
+    description: "Default work pool"
+    concurrency_limit: 10
+    is_paused: false
+    
+  spider-rss:
+    name: "pool-spider-rss"
+    type: "process"
+    description: "pool for rss spiders"
+    concurrency_limit: 10
+    is_paused: false
+    

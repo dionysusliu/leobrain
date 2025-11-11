@@ -56,21 +56,6 @@ active_tasks = Gauge(
     registry=registry
 )
 
-# API metrics
-api_requests_total = Counter(
-    'api_requests_total',
-    'Total number of API requests',
-    ['method', 'endpoint', 'status'],
-    registry=registry
-)
-
-api_request_duration = Histogram(
-    'api_request_duration_seconds',
-    'API request duration in seconds',
-    ['method', 'endpoint'],
-    registry=registry
-)
-
 # System info
 system_info = Info(
     'system',
