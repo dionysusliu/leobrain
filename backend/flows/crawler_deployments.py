@@ -12,6 +12,8 @@ from common.prefect_utils import helper_deployment_config_to_kwargs
 
 logger = logging.getLogger(__name__)
 
+github_repo_url = "https://github.com/dionysusliu/leobrain"
+
 
 def get_crawler_deployment_configs() -> List[DeploymentConfig]:
     """
@@ -129,7 +131,7 @@ async def deploy_crawler_flows(
     # docker容器中，挂载到 /app/backend
     flow_source_path="/app/backend"
     # flow 的入口
-    flow_entrypoint = "flows/crawler_flows.py:pf_flow_crawl_site_by_name"
+    flow_entrypoint = "backend/flows/crawler_flows.py:pf_flow_crawl_site_by_name"
 
     # 使用 crawler flow
     flow = pf_flow_crawl_site_by_name
@@ -144,7 +146,7 @@ async def deploy_crawler_flows(
         try:
             # 加载flow
             flow_from_source = await pf_flow_crawl_site_by_name.from_source(
-                source=flow_source_path,
+                source=github_repo_url,
                 entrypoint=flow_entrypoint,
             )
 

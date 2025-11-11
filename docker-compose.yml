@@ -166,7 +166,7 @@ services:
     container_name: leobrain-prefect-worker
     command: >
       sh -c "
-      prefect worker start --pool pool-spider-rss 
+      prefect worker start --pool pool-spider-rss --type docker 
       " 
     environment:
       PREFECT_API_URL: "http://prefect-server:4200/api"
